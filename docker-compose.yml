@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  mongodb:
+    image: mongo
+    restart: always
+    container_name: mongo
+    environment:
+      - .env
+    networks:
+      - compose-bridge
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+
+  mongo-express:
+    image: mongo-express
+    restart: always 
+    environment:
+      - .env
+    depends_on: 
+      - mongodb
+    ports:
+      - 8081:8081
+    networks:
+      - compose-bridge
+
+  app:
+    image: cgarcia/server-url-shortener:1.2
+    env_file: 
+      - .env
+    ports:
+      - 5000:${PORT}
+    depends_on: 
+      - mongodb
+      # - redis-server
+    networks:
+      - compose-bridge
+    volumes:
+      - ./:/app-node
+    command: npm run dev
+  
+  # redis-server:
+  #   image: redis:7
+  #   ports:
+  #     - 6379:6379
+  #   networks:
+  #     - compose-bridge
+
+networks:
+  compose-bridge:
+    driver: bridge
+volumes:
+  mongodb_data:
+  mongodb_config:
