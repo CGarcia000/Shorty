@@ -17,6 +17,7 @@ services:
   mongo-express:
     image: mongo-express
     restart: always 
+    container_name: mongo_express
     environment:
       - .env
     depends_on: 
@@ -26,10 +27,11 @@ services:
     networks:
       - compose-bridge
 
-  app:
+  server:
     image: cgarcia/server-url-shortener:1.2
     env_file: 
       - .env
+    container_name: server
     ports:
       - 5000:${PORT}
     depends_on: 

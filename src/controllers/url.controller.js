@@ -1,29 +1,73 @@
 import nano from "../utils/nanoid.js";
-import Joi from "joi";
+import dotenv from "dotenv";
+dotenv.config();
 
-import postUrlSchema from "../schemas/post.url.js";
 import urlRepository from "../repositories/url.repository.js";
 
-export async function urlShortener(req, res) {
-    // colocar como middleware
-    const validation = postUrlSchema.validate(req.body);
+// TODO - Apagar console logs
 
-    if (validation.error) {
-        const errors = validation.error.details.map(detail => detail.message);
-        res.status(422).send(errors);
-    }
+export async function urlShortener(req, res) {
+    const { validation } = res.locals;
+    const authUser = {
+        isLogged: false,
+        userToken: null
+    };
 
     try {
         const urlId = nano(12);
 
-        const url = await urlRepository.insertUrl({
-            url: validation.value.url,
-            identifier: urlId,
-        })
+        let url;
+        if (authUser.isLogged) {
 
-        console.log(url);
-        return res.status(url).send(201);
+        } else {
+            url = await urlRepository.insertUrl({
+                url: validation.value.url,
+                identifier: urlId,
+            })
+        }
+
+        if (url.acknowledged) {
+            const newUrl = process.env.APP_HOST + `/url/${urlId}`;
+            return res.status(201).send({url: newUrl});
+        }
+        return;
     } catch (error) {
-        return console.log(error);
+        console.log(error);
+        return res.sendStatus(400);
+    }
+}
+
+export async function redirectUrl(req, res) {
+    const { id } = req.params;
+
+    try {
+        const urlResp = await urlRepository.getUrlAndAddVisitByIdentifier({
+            identifier: id
+        });
+        if (urlResp.lastErrorObject.updatedExisting || urlResp.value !== null ) {
+            return res.redirect(urlResp.value.url);
+        }
+        return res.sendStatus(404);
+    }catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
+    }
+}
+
+export async function deleteUrl(req, res) { // auth
+    const { id } = req.params;
+    
+    try {
+        const resp = await urlRepository.deleteUrlByUrlIdAndUserId({
+            identifier: id,
+            // userId: 
+        })
+        if (resp.value !== null && resp.value?.identifier === id) {
+            return res.sendStatus(200);
+        }
+        return res.sendStatus(404);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(400);
     }
 }
