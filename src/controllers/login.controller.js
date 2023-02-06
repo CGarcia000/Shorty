@@ -53,7 +53,7 @@ export async function signIn(req, res) {
         }
         await sessionRepository.insertAccount({userId: user._id, token})
 
-        return res.sendStatus(200);
+        return res.status(200).send({token});
     } catch {
         console.log(error);
         return res.sendStatus(400);

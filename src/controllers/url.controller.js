@@ -3,24 +3,25 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import urlRepository from "../repositories/url.repository.js";
+import isValidObjectId from "../helper/functions/isValidObjectId.js";
 
 // TODO - Apagar console logs
 
 export async function urlShortener(req, res) {
-    const { validation } = res.locals;
-    const authUser = { // valor que retorna do middleware
-        isLogged: false,
-        userToken: null
-    };
+    const { validation, userId } = res.locals;
 
     try {
         const urlId = nano(12);
 
         let url;
-        if (authUser.isLogged) {
-
+        if (userId && isValidObjectId(userId)) {
+            url = await urlRepository.insertUrlWithUserId({
+                url: validation.value.url,
+                identifier: urlId,
+                userId
+            });
         } else {
-            url = await urlRepository.insertUrl({
+            url = await urlRepository.insertAnonUrl({
                 url: validation.value.url,
                 identifier: urlId,
             })
@@ -41,16 +42,20 @@ export async function redirectUrl(req, res) {
     const { id } = req.params;
 
     try {
-        const urlResp = await urlRepository.getUrlAndAddVisitByIdentifier({
+        const urlResp = await urlRepository.getUrlByIdentifier({
             identifier: id
         });
-        if (urlResp.lastErrorObject.updatedExisting || urlResp.value !== null ) {
-            return res.redirect(urlResp.value.url);
+        if (!urlResp || Object.keys(urlResp).length === 0) {
+            return res.sendStatus(404);
         }
-        return res.sendStatus(404);
+
+        if (Object.keys(urlResp).includes("user_id")) {
+            await urlRepository.updateUrlVisitsByIdentifier({urlId: String(urlResp._id)})
+        }
+        return res.redirect(urlResp.url);
     }catch (error) {
         console.log(error);
-        return res.sendStatus(400);
+        return res.sendStatus(500);
     }
 }
 
@@ -68,6 +73,6 @@ export async function deleteUrl(req, res) { // auth
         return res.sendStatus(404);
     } catch (error) {
         console.log(error);
-        return res.sendStatus(400);
+        return res.sendStatus(500);
     }
 }
