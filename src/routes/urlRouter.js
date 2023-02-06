@@ -13,7 +13,8 @@ const urlRouter = express.Router();
 
 urlRouter.post('/url/short',
     Validation.validateSchema(postUrlSchema),
-    urlControllers.urlShortener); // TODO - pensar dps em como deixar a rota semi-autenticada(?) // talvez é melhor criar outra
+    urlControllers.urlShortener
+); // TODO - pensar dps em como deixar a rota semi-autenticada(?) // talvez é melhor criar outra
 
 urlRouter.get('/url/:id', urlControllers.redirectUrl);
 
@@ -22,5 +23,7 @@ urlRouter.get('/url/:id', urlControllers.redirectUrl);
 // urlRouter.delete('/urls/:id', authenticateToken, urlControllers.deleteUrl); //authenticated
 urlRouter.delete('/url/:id', urlControllers.deleteUrl); // TODO - alterar para ser rota autenticada
 
+
+// criar rota get com as rotas do user
 
 export default urlRouter;

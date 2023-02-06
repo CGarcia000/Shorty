@@ -8,7 +8,7 @@ import urlRepository from "../repositories/url.repository.js";
 
 export async function urlShortener(req, res) {
     const { validation } = res.locals;
-    const authUser = {
+    const authUser = { // valor que retorna do middleware
         isLogged: false,
         userToken: null
     };
@@ -28,7 +28,7 @@ export async function urlShortener(req, res) {
 
         if (url.acknowledged) {
             const newUrl = process.env.APP_HOST + `/url/${urlId}`;
-            return res.status(201).send({url: newUrl});
+            return res.status(201).send({url: "http://" + newUrl});
         }
         return;
     } catch (error) {
@@ -56,11 +56,11 @@ export async function redirectUrl(req, res) {
 
 export async function deleteUrl(req, res) { // auth
     const { id } = req.params;
-    
+
     try {
         const resp = await urlRepository.deleteUrlByUrlIdAndUserId({
             identifier: id,
-            // userId: 
+            // userId:
         })
         if (resp.value !== null && resp.value?.identifier === id) {
             return res.sendStatus(200);
