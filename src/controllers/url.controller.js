@@ -59,18 +59,39 @@ export async function redirectUrl(req, res) {
     }
 }
 
-export async function deleteUrl(req, res) { // auth
+export async function deleteUrl(req, res) {
     const { id } = req.params;
+    const { userId } = res.locals;
 
     try {
         const resp = await urlRepository.deleteUrlByUrlIdAndUserId({
             identifier: id,
-            // userId:
+            userId
         })
         if (resp.value !== null && resp.value?.identifier === id) {
             return res.sendStatus(200);
         }
-        return res.sendStatus(404);
+        return res.sendStatus(401);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500);
+    }
+}
+
+// TODO - add createdAt para ordernar por mais recente
+export async function getAccountUrl(req, res) {
+    const { userId } = res.locals;
+
+    try {
+        const cursor = urlRepository.getUrlsByUser({userId});
+        const resp = [];
+        await cursor.forEach(element => {
+            resp.push(element);
+        });
+        if (!Array.isArray(resp)) {
+            return res.sendStatus(500);
+        }
+        return res.status(200).send(resp);
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);

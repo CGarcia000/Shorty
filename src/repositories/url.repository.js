@@ -65,8 +65,17 @@ function getUrlAndAddVisitByIdentifier({identifier}) {
 
 function deleteUrlByUrlIdAndUserId({identifier, userId}) {
     return db.collection("urls").findOneAndDelete(
-        { identifier },
+        { identifier, user_id: ObjectId(userId) },
     )
+}
+
+function getUrlsByUser({userId}) {
+    return db.collection("urls").find(
+        { user_id: { $in: [ObjectId(userId)] } },
+        {
+            projection: { _id: 0, user_id: 0 }
+        }
+    );
 }
 
 const urlRepository = {
@@ -76,6 +85,7 @@ const urlRepository = {
     updateUrlVisitsByIdentifier,
     getUrlAndAddVisitByIdentifier,
     deleteUrlByUrlIdAndUserId,
+    getUrlsByUser,
 };
 
 export default urlRepository;

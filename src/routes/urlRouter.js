@@ -2,30 +2,25 @@ import express from "express";
 
 import * as urlControllers from '../controllers/url.controller.js'
 import Validation from "../middleware/schemaValidation.middleware.js";
-import { authenticateToken } from "../middleware/authentication.middleware.js";
+import { authenticateToken, semiAuthenticateToken } from "../middleware/authentication.middleware.js";
 
 // Schemas
 import postUrlSchema from "../schemas/post.url.js";
 
-
-// import { authenticateToken } from "../middleware/authorizations.middleware.js";
-
 const urlRouter = express.Router();
 
 urlRouter.post('/url/short',
-    authenticateToken,
+    semiAuthenticateToken,
     Validation.validateSchema(postUrlSchema),
     urlControllers.urlShortener
 );
 
 urlRouter.get('/url/:id', urlControllers.redirectUrl);
 
-// urlRouter.get('/urls/open/:shortUrl', urlControllers.redirectUrl);
+urlRouter.use(authenticateToken);
 
-// urlRouter.delete('/urls/:id', authenticateToken, urlControllers.deleteUrl); //authenticated
-urlRouter.delete('/url/:id', urlControllers.deleteUrl); // TODO - alterar para ser rota autenticada
+urlRouter.delete('/url/:id', urlControllers.deleteUrl);
 
-
-// criar rota get com as rotas do user
+urlRouter.get('/url', urlControllers.getAccountUrl);
 
 export default urlRouter;
